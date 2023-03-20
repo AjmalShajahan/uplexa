@@ -39,7 +39,7 @@ def setup():
 def build():
     global args, workdir
 
-    os.makedirs('uplexa-binaries/' + args.version, exist_ok=True)
+    os.makedirs(f'uplexa-binaries/{args.version}', exist_ok=True)
     print('\nBuilding Dependencies\n')
     os.chdir('gitian-builder')
     os.makedirs('inputs', exist_ok=True)
@@ -48,35 +48,137 @@ def build():
     subprocess.check_call(['wget', '-N', '-P', 'inputs', 'https://bitcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch'])
     subprocess.check_output(["echo 'a8c4e9cafba922f89de0df1f2152e7be286aba73f78505169bc351a7938dd911 inputs/osslsigncode-Backports-to-1.7.1.patch' | sha256sum -c"], shell=True)
     subprocess.check_output(["echo 'f9a8cdb38b9c309326764ebc937cba1523a3a751a7ab05df3ecc99d18ae466c9 inputs/osslsigncode-1.7.1.tar.gz' | sha256sum -c"], shell=True)
-    subprocess.check_call(['make', '-C', '../uplexa/contrib/depends', 'download', 'SOURCES_PATH=' + os.getcwd() + '/cache/common'])
+    subprocess.check_call(
+        [
+            'make',
+            '-C',
+            '../uplexa/contrib/depends',
+            'download',
+            f'SOURCES_PATH={os.getcwd()}/cache/common',
+        ]
+    )
 
     if args.linux:
         print('\nCompiling ' + args.version + ' Linux')
-        subprocess.check_call(['bin/gbuild', '-j', args.jobs, '-m', args.memory, '--commit', 'uplexa='+args.commit, '--url', 'uplexa='+args.url, '../uplexa/contrib/gitian/gitian-linux.yml'])
-        subprocess.check_call(['bin/gsign', '-p', args.sign_prog, '--signer', args.signer, '--release', args.version+'-linux', '--destination', '../gitian.sigs/', '../uplexa/contrib/gitian/gitian-linux.yml'])
-        subprocess.check_call('mv build/out/uplexa-*.tar.gz ../uplexa-binaries/'+args.version, shell=True)
+        subprocess.check_call(
+            [
+                'bin/gbuild',
+                '-j',
+                args.jobs,
+                '-m',
+                args.memory,
+                '--commit',
+                f'uplexa={args.commit}',
+                '--url',
+                f'uplexa={args.url}',
+                '../uplexa/contrib/gitian/gitian-linux.yml',
+            ]
+        )
+        subprocess.check_call(
+            [
+                'bin/gsign',
+                '-p',
+                args.sign_prog,
+                '--signer',
+                args.signer,
+                '--release',
+                f'{args.version}-linux',
+                '--destination',
+                '../gitian.sigs/',
+                '../uplexa/contrib/gitian/gitian-linux.yml',
+            ]
+        )
+        subprocess.check_call(
+            f'mv build/out/uplexa-*.tar.gz ../uplexa-binaries/{args.version}',
+            shell=True,
+        )
 
     if args.windows:
         print('\nCompiling ' + args.version + ' Windows')
-        subprocess.check_call(['bin/gbuild', '-j', args.jobs, '-m', args.memory, '--commit', 'uplexa='+args.commit, '--url', 'uplexa='+args.url, '../uplexa/contrib/gitian/gitian-win.yml'])
-        subprocess.check_call(['bin/gsign', '-p', args.sign_prog, '--signer', args.signer, '--release', args.version+'-win', '--destination', '../gitian.sigs/', '../uplexa/contrib/gitian/gitian-win.yml'])
-        subprocess.check_call('mv build/out/uplexa*.zip ../uplexa-binaries/'+args.version, shell=True)
+        subprocess.check_call(
+            [
+                'bin/gbuild',
+                '-j',
+                args.jobs,
+                '-m',
+                args.memory,
+                '--commit',
+                f'uplexa={args.commit}',
+                '--url',
+                f'uplexa={args.url}',
+                '../uplexa/contrib/gitian/gitian-win.yml',
+            ]
+        )
+        subprocess.check_call(
+            [
+                'bin/gsign',
+                '-p',
+                args.sign_prog,
+                '--signer',
+                args.signer,
+                '--release',
+                f'{args.version}-win',
+                '--destination',
+                '../gitian.sigs/',
+                '../uplexa/contrib/gitian/gitian-win.yml',
+            ]
+        )
+        subprocess.check_call(
+            f'mv build/out/uplexa*.zip ../uplexa-binaries/{args.version}',
+            shell=True,
+        )
 
     if args.macos:
         print('\nCompiling ' + args.version + ' MacOS')
-        subprocess.check_call(['bin/gbuild', '-j', args.jobs, '-m', args.memory, '--commit', 'uplexa='+args.commit, '--url', 'uplexa'+args.url, '../uplexa/contrib/gitian/gitian-osx.yml'])
-        subprocess.check_call(['bin/gsign', '-p', args.sign_prog, '--signer', args.signer, '--release', args.version+'-osx', '--destination', '../gitian.sigs/', '../uplexa/contrib/gitian/gitian-osx.yml'])
-        subprocess.check_call('mv build/out/uplexa*.tar.gz ../uplexa-binaries/'+args.version, shell=True)
+        subprocess.check_call(
+            [
+                'bin/gbuild',
+                '-j',
+                args.jobs,
+                '-m',
+                args.memory,
+                '--commit',
+                f'uplexa={args.commit}',
+                '--url',
+                f'uplexa{args.url}',
+                '../uplexa/contrib/gitian/gitian-osx.yml',
+            ]
+        )
+        subprocess.check_call(
+            [
+                'bin/gsign',
+                '-p',
+                args.sign_prog,
+                '--signer',
+                args.signer,
+                '--release',
+                f'{args.version}-osx',
+                '--destination',
+                '../gitian.sigs/',
+                '../uplexa/contrib/gitian/gitian-osx.yml',
+            ]
+        )
+        subprocess.check_call(
+            f'mv build/out/uplexa*.tar.gz ../uplexa-binaries/{args.version}',
+            shell=True,
+        )
 
     os.chdir(workdir)
 
     if args.commit_files:
         print('\nCommitting '+args.version+' Unsigned Sigs\n')
         os.chdir('gitian.sigs')
-        subprocess.check_call(['git', 'add', args.version+'-linux/'+args.signer])
-        subprocess.check_call(['git', 'add', args.version+'-win/'+args.signer])
-        subprocess.check_call(['git', 'add', args.version+'-osx/'+args.signer])
-        subprocess.check_call(['git', 'commit', '-m', 'Add '+args.version+' unsigned sigs for '+args.signer])
+        subprocess.check_call(['git', 'add', f'{args.version}-linux/{args.signer}'])
+        subprocess.check_call(['git', 'add', f'{args.version}-win/{args.signer}'])
+        subprocess.check_call(['git', 'add', f'{args.version}-osx/{args.signer}'])
+        subprocess.check_call(
+            [
+                'git',
+                'commit',
+                '-m',
+                f'Add {args.version} unsigned sigs for {args.signer}',
+            ]
+        )
         os.chdir(workdir)
 
 def verify():
@@ -84,11 +186,41 @@ def verify():
     os.chdir('gitian-builder')
 
     print('\nVerifying v'+args.version+' Linux\n')
-    subprocess.check_call(['bin/gverify', '-v', '-d', '../gitian.sigs/', '-r', args.version+'-linux', '../uplexa/contrib/gitian/gitian-linux.yml'])
+    subprocess.check_call(
+        [
+            'bin/gverify',
+            '-v',
+            '-d',
+            '../gitian.sigs/',
+            '-r',
+            f'{args.version}-linux',
+            '../uplexa/contrib/gitian/gitian-linux.yml',
+        ]
+    )
     print('\nVerifying v'+args.version+' Windows\n')
-    subprocess.check_call(['bin/gverify', '-v', '-d', '../gitian.sigs/', '-r', args.version+'-win', '../uplexa/contrib/gitian/gitian-win.yml'])
+    subprocess.check_call(
+        [
+            'bin/gverify',
+            '-v',
+            '-d',
+            '../gitian.sigs/',
+            '-r',
+            f'{args.version}-win',
+            '../uplexa/contrib/gitian/gitian-win.yml',
+        ]
+    )
     print('\nVerifying v'+args.version+' MacOS\n')
-    subprocess.check_call(['bin/gverify', '-v', '-d', '../gitian.sigs/', '-r', args.version+'-osx', '../uplexa/contrib/gitian/gitian-osx.yml'])
+    subprocess.check_call(
+        [
+            'bin/gverify',
+            '-v',
+            '-d',
+            '../gitian.sigs/',
+            '-r',
+            f'{args.version}-osx',
+            '../uplexa/contrib/gitian/gitian-osx.yml',
+        ]
+    )
     os.chdir(workdir)
 
 def main():
@@ -136,9 +268,9 @@ def main():
         os.environ['USE_DOCKER'] = '1'
     elif not args.kvm:
         os.environ['USE_LXC'] = '1'
-        if not 'GITIAN_HOST_IP' in os.environ.keys():
+        if 'GITIAN_HOST_IP' not in os.environ.keys():
             os.environ['GITIAN_HOST_IP'] = '10.0.3.1'
-        if not 'LXC_GUEST_IP' in os.environ.keys():
+        if 'LXC_GUEST_IP' not in os.environ.keys():
             os.environ['LXC_GUEST_IP'] = '10.0.3.5'
 
     # Disable for MacOS if no SDK found
@@ -149,29 +281,33 @@ def main():
     script_name = os.path.basename(sys.argv[0])
     # Signer and version shouldn't be empty
     if args.signer == '':
-        print(script_name+': Missing signer.')
-        print('Try '+script_name+' --help for more information')
+        print(f'{script_name}: Missing signer.')
+        print(f'Try {script_name} --help for more information')
         sys.exit(1)
     if args.version == '':
-        print(script_name+': Missing version.')
-        print('Try '+script_name+' --help for more information')
+        print(f'{script_name}: Missing version.')
+        print(f'Try {script_name} --help for more information')
         sys.exit(1)
 
     # Add leading 'v' for tags
     if args.commit and args.pull:
         raise Exception('Cannot have both commit and pull')
-    args.commit = args.commit if args.commit else args.version
+    args.commit = args.commit or args.version
 
     if args.setup:
         setup()
 
     os.chdir('uplexa')
     if args.pull:
-        subprocess.check_call(['git', 'fetch', args.url, 'refs/pull/'+args.version+'/merge'])
+        subprocess.check_call(
+            ['git', 'fetch', args.url, f'refs/pull/{args.version}/merge']
+        )
         os.chdir('../gitian-builder/inputs/uplexa')
-        subprocess.check_call(['git', 'fetch', args.url, 'refs/pull/'+args.version+'/merge'])
+        subprocess.check_call(
+            ['git', 'fetch', args.url, f'refs/pull/{args.version}/merge']
+        )
         args.commit = subprocess.check_output(['git', 'show', '-s', '--format=%H', 'FETCH_HEAD'], universal_newlines=True).strip()
-        args.version = 'pull-' + args.version
+        args.version = f'pull-{args.version}'
     print(args.commit)
     subprocess.check_call(['git', 'fetch'])
     subprocess.check_call(['git', 'checkout', args.commit])
